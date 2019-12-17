@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' type='text/css' href='/nm/stylesheets/layui.css' />
+  </head>
+  <body>
+    <form class="layui-form" action="" style="margin-top:15px;">
+      <div class="layui-form-item">
+        <label class="layui-form-label">会议室</label>
+        <div class="layui-input-inline">
+          <input type="text" name="room_name"  autocomplete="off" class="layui-input" value="938" disabled>
+        </div>
+        <label class="layui-form-label">用途</label>
+        <div class="layui-input-inline">
+          <input type="text" id='title' name="title" required  lay-verify="required" placeholder="请输入用途" autocomplete="off" class="layui-input" disabled>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">人数</label>
+        <div class="layui-input-inline">
+          <input type="text" name="num" id='num' lay-verify="number" placeholder="人数" autocomplete="off" class="layui-input" disabled >
+        </div>
+        <label class="layui-form-label">负责人</label>
+        <div class="layui-input-inline">
+          <input type="text" name="fuzeren" id='fuzeren' lay-verify="required" placeholder="负责老师" autocomplete="off" class="layui-input" disabled>
+        </div>
+
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">手机</label>
+        <div class="layui-input-inline">
+          <input type="text" name="phone" lay-verify="phone" id='phone' placeholder="手机号码" autocomplete="off" class="layui-input" disabled>
+
+        </div>
+        <label class="layui-form-label">申请人</label>
+        <div class="layui-input-inline">
+          <input type="text" name="applyname"  class="layui-input" id="applyname" value="" disabled>
+        </div>
+      </div>
+      <div class="layui-form-item">
+      <label class="layui-form-label">申请时间</label>
+        <div class="layui-input-inline">
+          <input type="text" name="applytime"  class="layui-input" id="applytime" value="" disabled>
+        </div>
+        <label class="layui-form-label">是否通过</label>
+        <div class="layui-input-inline" id="isok">
+           <input type="radio" name="isok" value="1" title="通过">
+           <input type="radio" name="isok" value="0" title="不通过">
+        </div>
+
+      </div>
+      <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn" lay-submit lay-filter="formDemo">确定</button>
+        </div>
+      </div>
+    </form>
+  </body>
+    <script src="/nm/javascripts/jquery3.2.min.js"></script>
+    <script src="/nm/javascripts/layui.all.js"></script>
+    <script>
+    $(document).ready(function() {
+      let form = layui.form,$ = layui.$,layer = layui.layer
+      //初始化表单信息
+      let parent_json = parent.json
+      console.log('parent_json--->',parent_json)
+      $('#title').val(parent_json.mytitle)
+      $('#num').val(parent_json.num)
+      $('#fuzeren').val(parent_json.fuzeren)
+      $('#phone').val(parent_json.phone)
+      $('#applytime').val(parent_json.applytime)
+      $('#applyname').val(parent_json.applyname)
+      $("input[name=isok][value='1']").attr("checked", parent_json.isok == 1 ? true : false)
+      $("input[name=isok][value='0']").attr("checked", parent_json.isok == 0 ? true : false)
+      form.render()
+      //监听提交 13760277012
+      form.on('submit(formDemo)', function(data){
+        console.log('data',data)
+        let isok = $('input[name="isok"]:checked').val()
+        if(!isok){
+          console.log("没有审批")
+          layer.msg('请选择审批结果')
+          return false
+        }
+        data.field.isok = isok
+        data.field.myid = parent_json.myid
+        $.ajax({
+          url:'/nm/spsq',
+          type:'POST',
+          data:data.field,
+          dataType : "json",
+          success:function(result){
+            if(result.code == 0){
+              console.log('add success')
+              //墨绿深蓝风
+            let frameindex = layer.alert('审批结束', {
+              skin: 'layui-layer-molv' //样式类名
+              ,closeBtn: 0
+            }, function(){
+              layer.close(frameindex);
+              parent.layer.closeAll()
+            });         
+            }
+          },
+          error:function(msg){
+            console.log('ajax error msg',msg)
+          }
+        })
+        return false;
+      });
+    })
+    </script>
+
+</html>
