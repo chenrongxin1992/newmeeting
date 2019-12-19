@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' type='text/css' href='/nm/stylesheets/layui.css' />
+  </head>
+  <body>
+    <form class="layui-form" action="" style="margin-top:15px;">
+      <div class="layui-form-item">
+        <label class="layui-form-label">会议室</label>
+        <div class="layui-input-inline" style="display:none;">
+          <input type="text" name="_id" class="layui-input"  disabled id="_id" >
+        </div>
+        <div class="layui-input-inline">
+          <input type="text" name="room_name" class="layui-input"  disabled id="room_name">
+        </div>
+        <label class="layui-form-label">用途</label>
+        <div class="layui-input-inline">
+          <input type="text" name="title" required  lay-verify="required" placeholder="请输入用途"  class="layui-input" id="title">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">人数</label>
+        <div class="layui-input-inline">
+          <input type="text" name="num" lay-verify="number" placeholder="人数"  class="layui-input" id="num">
+        </div>
+        <label class="layui-form-label">负责人</label>
+        <div class="layui-input-inline">
+          <input type="text" name="fuzeren" lay-verify="required" placeholder="负责老师" class="layui-input" id="fuzeren">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">手机</label>
+        <div class="layui-input-inline">
+          <input type="text" name="phone" lay-verify="phone" placeholder="手机号码"  class="layui-input" id="phone">
+        </div>
+        <label class="layui-form-label">申请人</label>
+        <div class="layui-input-inline">
+          <input type="text" name="applyname"  class="layui-input" id="applyname" value="<%=user.cn%>" disabled>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">时间</label>
+        <div class="layui-input-inline">
+         <input type="text" name="start"  class="layui-input" id="start" value="" disabled>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn" lay-submit lay-filter="formDemo">确认</button>
+        </div>
+      </div>
+    </form>
+  </body>
+    <script src="/nm/javascripts/jquery3.2.min.js"></script>
+    <script src="/nm/javascripts/layui.all.js"></script>
+    <script>
+    $(document).ready(function() {
+      let form = layui.form,$ = layui.$
+
+      let parent_json = parent.json
+      console.log('parent_json------------------------',parent_json)
+      let room_name = parent_json.room_name
+      if(room_name == 'bgt')
+        room_name = '报告厅'
+      $('#room_name').val(room_name)
+      console.log('room--->',parent_json.room_name)
+      //初始化roomname
+      
+      if(parent_json.modify == 1){
+        console.log('修改...')
+        console.log('date',parent_json.date)
+        $('#_id').val(parent_json.myid)
+        $('#date').val(parent_json.date)
+        $('#title').val(parent_json.mytitle)
+        $('#num').val(parent_json.num)
+        $('#fuzeren').val(parent_json.fuzeren)
+        $('#phone').val(parent_json.phone)
+        $('#applyname').val(parent_json.applyname)
+        let start_h = parseInt(parent_json.startTime.substring(0,2)),
+            end_h = parseInt(parent_json.endTime.substring(0,2))
+        console.log('start h-->',start_h,end_h)
+        let strend = ''
+        for(let i = 8;i<20;i++){
+            let temp = i + 1 + ''
+            strend += '<option value="'+temp+':30">'+temp+':30</option>'
+        }
+        $('#end').children().remove()
+        $('#end').append(strend)
+        $('#end').val(parent_json.endTime)
+        $('#start').val(parent_json.startTime)
+        form.render()
+      }else{
+        //初始化
+        $('#start').val(parent_json.click_date + ':' + '全天')
+      }
+      
+      //监听提交 13760277012
+      form.on('submit(formDemo)', function(data){
+        
+        //return false
+        //data.field.start = ((data.field.start).split(' '))[0]
+        if(parent_json.modify!=1){
+          data.field.start = ((data.field.start).split(':'))[0]
+        }
+        console.log('data',data)
+        //return false
+        $.ajax({
+          url:'/nm/add_applyform_allday',
+          type:'POST',
+          data:data.field,
+          dataType : "json",
+          success:function(result){
+            if(result.code == 0){
+              console.log('add success')
+              //墨绿深蓝风
+            let frameindex = layer.alert('操作成功', {
+              skin: 'layui-layer-molv' //样式类名
+              ,closeBtn: 0
+            }, function(){
+              layer.close(frameindex);
+              parent.layer.closeAll()
+            });         
+            }
+          },
+          error:function(msg){
+            console.log('ajax error msg',msg)
+          }
+        })
+        return false;
+      });
+    })
+    </script>
+
+</html>

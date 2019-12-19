@@ -43,7 +43,9 @@ var meetingSchema = new Schema({
     title : {type:String},//主题
     num : {type:Number},//人数
     start : {type:String},//开始时间
+    alldaystart : {type:String},//api开始时间 2019-12-18 08:30
     end : {type:String},//结束时间
+    alldayend : {type:String},//api结束时间 2019-12-18 20:30
     date : {type:String},//日期
     fuzeren : {type:String},//负责人
     phone : {type:String},
@@ -51,6 +53,7 @@ var meetingSchema = new Schema({
     applytime : {type:String,default:moment().format('YYYY-MM-DD HH:mm')},
     applytimestamp : {type:String,default:moment().format('X')},
     date_timestamp : {type:String},//日期时间戳
+    allDay : {type:Boolean,default:false},
     isok : {type:Number,default:0}//是否批准 0否 1准
 },{collection:'meeting'})
 
