@@ -166,7 +166,8 @@
 	            center: 'title',
 	            right: 'month,agendaWeek'
 	        },
-	        themeSystem: 'bootstrap3',  // 使用bootstrap3风格
+	        //themeSystem: 'bootstrap3',  // 使用bootstrap3风格
+	        themeSystem: 'jquery-ui',  // 使用bootstrap3风格
 	        locale:'zh-cn',
 	        titleFormat:'YYYY - MM',
 	        timeFormat:'H(:mm)',
@@ -215,7 +216,7 @@
 	   		eventResize : function( event, dayDelta, revertFunc ) {
 			    console.log(' --- start --- eventResize',dayDelta);
 			    console.log('eventResize被执行，Event的title属性值为：', event.title,'当前用户','<%=user.cn%>','事件申请人',event.applyname,'审批情况',event.isok);
-			    if(dayDelta._days != 0 && event.isok == 0 && event.applyname == '<%=user.cn%>' && moment(event.date).diff(moment(),'day')>=0){
+			    if(dayDelta._days != 0){
 			    	if('<%=user.cn%>'==event.applyname && event.isok!=1 && moment(event.date).diff(moment(),'day')>=0){
 			    		console.log('改变了',dayDelta._days,'天',event.end._i)
 			    		$.ajax({
@@ -235,6 +236,15 @@
 						})
 			        		console.log('eventResize被执行，Event的start和end时间改变了：', dayDelta._days+'天！');
 			    	}else{
+			    		if('<%=user.cn%>'!=event.applyname){
+							layer.msg('你不能修改别人的申请')
+						}
+						 if(event.isok==1){
+							layer.msg('通过状态的申请不能改变使用时间')
+						}
+						 if(moment(event.date).diff(moment(),'day')<0){
+							layer.msg('申请已过期，不能修改')
+						}
 			    		console.log('不符合条件，回退')
 			        	revertFunc()
 			    	}	
@@ -262,6 +272,15 @@
 							}
 						})
 			        }else{
+			        	if('<%=user.cn%>'!=event.applyname){
+							layer.msg('你不能修改别人的申请')
+						}
+						 if(event.isok==1){
+							layer.msg('通过状态的申请不能改变使用时间')
+						}
+						 if(moment(event.date).diff(moment(),'day')<0){
+							layer.msg('申请已过期，不能修改')
+						}
 			        	console.log('不符合条件，回退')
 			        	revertFunc()
 			        }
