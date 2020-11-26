@@ -45,15 +45,17 @@ var meetingSchema = new Schema({
     start : {type:String},//开始时间
     alldaystart : {type:String},//api开始时间 2019-12-18 08:30
     end : {type:String},//结束时间
+    endtimestamp:{type:String},
     alldayend : {type:String},//api结束时间 2019-12-18 20:30
     date : {type:String},//日期
     fuzeren : {type:String},//负责人
     phone : {type:String},
     applyname : {type:String},
-    applytime : {type:String,default:moment().format('YYYY-MM-DD HH:mm')},
+    applytime : {type:String,default:moment(new Date()).format('YYYY-MM-DD HH:mm')},
     applytimestamp : {type:String,default:moment().format('X')},
     date_timestamp : {type:String},//日期时间戳
     allDay : {type:Boolean,default:false},
+    judgedate : {type:String},//全天申请的时候使用，用于判断是否过期变灰，默认等于req.body.end
     isok : {type:Number,default:0}//是否批准 0否 1准
 },{collection:'meeting'})
 

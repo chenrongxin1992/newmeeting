@@ -115,7 +115,7 @@ function shezhi_admin(user){
 		return 1
 	else if(user == '曾小告')
 		return 2
-	else if(user == '刘蓓')
+	else if(user == '岑皓')
 		return 3
 	else if(user == '贺亮')
 		return 4
@@ -145,6 +145,7 @@ router.get('/eventjson',function(req,res){
 			let resultarr = [],
 				temp = {}
 			async.eachLimit(docs,1,function(item,cb){
+				console.log('applytime----->',item.applytime)
 				temp._id = item._id
 				temp.start = item.date + ' ' + item.start
 				temp.end = item.date + ' ' +item.end
@@ -174,34 +175,55 @@ router.post('/getapplyinfo',function(req,res){
 	//let today = moment(moment().format('YYYY-MM-DD')).format('X'),
 	//	today_7 = moment(moment(moment().format('YYYY-MM-DD')).add(7, 'd').format('YYYY-MM-DD')).format('X');
 	let firstDay_of_month = req.body.firstDay_of_month,
-		endDay_of_month = req.body.endDay_of_month
+		endDay_of_month = req.body.endDay_of_month,
+		searchobj = {}
+	let room_name = req.body.room_name
+	if(room_name == 'bgt'){
+		room_name = '报告厅'
+	}
+	console.log('room_name',room_name)
 	if(firstDay_of_month && endDay_of_month){
 		console.log('查询月记录')
 		console.log(moment(firstDay_of_month).format('X'),moment(endDay_of_month).format('X'))
 		today = moment(firstDay_of_month).format('X')
 		today_7 = moment(endDay_of_month).format('X')
-	}	
-	//console.log('today',today)
-	//console.log('today_7',today_7)
-	let room_name = req.body.room_name
-	if(room_name == 'bgt'){
-		room_name = '报告厅'
+		searchobj = {
+			'$and':[{'room_name':room_name},{'date_timestamp':{'$gte':today}},{'date_timestamp':{'$lte':today_7}}]
+		}
+	}else{
+		console.log('查询周记录')
+		console.log(today,today_7)
+		searchobj = {
+			'$or':[
+				{'$and':[{'room_name':room_name},{'endtimestamp':{'$gte':today}},{'endtimestamp':{'$lte':today_7}}]},
+				{'$and':[{'room_name':room_name},{'date_timestamp':{'$gte':today}},{'date_timestamp':{'$lte':today_7}}]}
+			]
+			//'$or':[{'room_name':room_name},{'endtimestamp':{'$gte':today}},{'endtimestamp':{'$lte':today_7}}]
+		}
 	}
-	let search = meeting.find({})
-		search.where('room_name').equals(room_name)
-		search.where('date_timestamp').gte(today)
-		search.where('date_timestamp').lte(today_7)
+	console.log('searchobj',searchobj)
+	//console.log('today_7',today_7)
+	
+	let search = meeting.find(searchobj)
+		
+		// if(!firstDay_of_month && !endDay_of_month){
+		// 	console.log('here------------>',today,today_7)
+		// 	search.where('endtimestamp').gte(today)
+		// 	search.where('endtimestamp').lte(today_7)
+		// }
 		search.sort({'date_timestamp':-1})
 		search.exec(function(err,docs){
 			if(err){
 				console.log('err',err)
 				return res.json({'code':-1,'msg':err})
 			}
-			console.log('docs',docs)
+			//console.log('docs',docs)
 			return res.json({'code':0,'data':docs})
 		})
 })
 router.get('/applyform', function(req, res, next) {
+	if(!req.session.user)
+		return res.end('请刷新页面')
 	if(req.query._id){
 		let search = meeting.findOne({})
 			search.where('_id').equals(req.query._id)
@@ -220,8 +242,7 @@ router.get('/hysinfo', function(req, res, next) {
   res.render('hysinfo', { title: '会议室简况' });
 })
 //审批申请
-//Model.update(conditions,doc,[options],[callback])根据条件更新所有：
-//Model.findOneAndUpdate([conditions],[update],[options],[callback])根据指定条件更新一个：
+
 router.get('/spsq', function(req, res, next) {
   res.render('spsq', { title: '审批申请' });
 }).post('/spsq',function(req,res){//changeallday
@@ -251,10 +272,25 @@ router.get('/spsq', function(req, res, next) {
 }).get('/spsq_allday', function(req, res, next) {
   res.render('spsq_allday', { title: '审批申请-全天' });
 }).post('/changeallday',function(req,res){//changeallday
-	meeting.findByIdAndUpdate(req.body._id,{
-	 	end:req.body.end,
-	 	alldayend:req.body.alldayend
-	 }, function (err) {
+	console.log('changeallday--------------------------------')
+	let obj = {}
+	if(req.body.alldayend){
+		console.log('全天申请修改')
+		obj = {
+			end:req.body.end,
+		 	alldayend:req.body.alldayend,
+		 	endtimestamp:moment(req.body.alldayend).format('X'),
+		 	judgedate:req.body.end
+		}
+	}else{
+		obj = {
+			end:req.body.end
+		 	//alldayend:req.body.alldayend,
+		 	//endtimestamp:moment(req.body.alldayend).format('X'),
+		 	//judgedate:req.body.end
+		}
+	}
+	meeting.findByIdAndUpdate(req.body._id, obj, function (err) {
 	 	if(err) {
 	 		console.log('更改失败')
 	 		return res.json({'code':-1,'msg':err})
@@ -275,13 +311,14 @@ router.post('/delnm',function(req,res){
 })
 router.post('/add_applyform',function(req,res){
 	if(req.body._id){
-		console.log('修改-------')
+		console.log('修改-------',req.body.end)
 		let updateobj = {
 			room_name : req.body.room_name,
 			title : req.body.title,
 			num : req.body.num,
 			start : req.body.start,
 			end : req.body.end,
+			//endtimestamp : moment(req.body.end).format('X'),
 			date : req.body.date,
 			fuzeren : req.body.fuzeren,
 			phone :req.body.phone,
@@ -303,11 +340,13 @@ router.post('/add_applyform',function(req,res){
 			num : req.body.num,
 			start : req.body.start,
 			end : req.body.end,
+			//endtimestamp : moment(req.body.end).format('X'),
 			date : req.body.date,
 			fuzeren : req.body.fuzeren,
 			phone :req.body.phone,
 			applyname :req.body.applyname,
-			date_timestamp : moment(req.body.date).format('X')
+			date_timestamp : moment(req.body.date).format('X'),
+			applytime:moment().format('YYYY-MM-DD HH:mm')
 		})
 		newmeeting.save(function(err,doc){
 			if(err){
@@ -320,6 +359,8 @@ router.post('/add_applyform',function(req,res){
 	}
 })
 router.get('/applyform_allday', function(req, res, next) {
+	if(!req.session.user)
+		return res.end('请刷新页面')
 	if(req.query._id){
 		let search = meeting.findOne({})
 			search.where('_id').equals(req.query._id)
@@ -331,6 +372,7 @@ router.get('/applyform_allday', function(req, res, next) {
 				res.render('applyform_allday', { title: 'applyform_allday' ,data:doc});
 			})	
 	}else{
+		console.log('session',req.session.user,res.locals.user)
 		res.render('applyform_allday', { title: 'applyform_allday',data:null });
 	}
 })
@@ -343,6 +385,8 @@ router.post('/add_applyform_allday',function(req,res){
 			num : req.body.num,
 			start : req.body.start,
 			end : req.body.end,
+			endtimestamp :  moment(req.body.end).format('X'),
+			judgedate:req.body.end,
 			date : req.body.date,
 			fuzeren : req.body.fuzeren,
 			phone :req.body.phone,
@@ -366,13 +410,16 @@ router.post('/add_applyform_allday',function(req,res){
 			start : req.body.start,
 			alldaystart : req.body.start,
 			end : req.body.start,
+			judgedate:req.body.start,
+			endtimestamp :  moment(req.body.start).format('X'),
 			alldayend : req.body.start,
 			date : req.body.start,
 			fuzeren : req.body.fuzeren,
 			phone :req.body.phone,
 			applyname :req.body.applyname,
 			date_timestamp : moment(req.body.date).format('X'),
-			allDay:true
+			allDay:true,
+			applytime:moment().format('YYYY-MM-DD HH:mm')
 		})
 		newmeeting.save(function(err,doc){
 			if(err){

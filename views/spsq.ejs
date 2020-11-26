@@ -9,7 +9,7 @@
       <div class="layui-form-item">
         <label class="layui-form-label">会议室</label>
         <div class="layui-input-inline">
-          <input type="text" name="room_name"  autocomplete="off" class="layui-input" value="938" disabled>
+          <input type="text" name="room_name"  autocomplete="off" class="layui-input" value="" disabled id="room_name">
         </div>
         <label class="layui-form-label">用途</label>
         <div class="layui-input-inline">
@@ -65,6 +65,7 @@
       //初始化表单信息
       let parent_json = parent.json
       console.log('parent_json--->',parent_json)
+      $('#room_name').val(parent_json.room_name)
       $('#title').val(parent_json.mytitle)
       $('#num').val(parent_json.num)
       $('#fuzeren').val(parent_json.fuzeren)

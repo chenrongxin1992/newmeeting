@@ -29,15 +29,18 @@ app.use(session({
     resave: true, //是指每次请求都重新设置session cookie，假设你的cookie是6000毫秒过期，每次请求都会再设置6000毫秒
     saveUninitialized: false, // 是指无论有没有session cookie，每次请求都设置个session cookie ，默认给个标示为 connect.sid。
     secret: 'spatial',
+    rolling: true,
     cookie:{ 
-        maxAge: 1000* 60 * 60 * 120, //60分钟有效期
+        maxAge: 1000* 60 * 60 * 220, //60分钟有效期
         httpOnly: true
         //expires : new Date(Date.now() + 7200000)//默认是UTC时间，Date.now()获取当前时间的时间戳，输出是毫秒。
-    },
-    store:new MongoStore({url: 'mongodb://newmeeting:youtrytry@localhost:27017/newmeeting'})
+    }//,
+    //store:new MongoStore({url: 'mongodb://newmeeting:youtrytry@localhost:27017/newmeeting'})
 }));
 app.use(function(req,res,next){ 
     res.locals.user = req.session.user;   // 从session 获取 user对象
+    console.log('--------------------------------------')
+    console.log(res.locals.user)
     next();  //中间件传递
 });
 app.use('/', index);
